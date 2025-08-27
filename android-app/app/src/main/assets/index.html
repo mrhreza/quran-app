@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Quran with Translations</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #f8f8f8;
+            --text-color: #333;
+            --border-color: #ddd;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: var(--text-color);
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        .surah-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+        
+        .surah-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .surah-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .surah-number {
+            background-color: var(--primary-color);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .surah-details {
+            flex-grow: 1;
+        }
+        
+        .surah-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .surah-translation {
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+        
+        .surah-bengali {
+            color: #888;
+            font-style: italic;
+        }
+        
+        .verse-count {
+            color: #999;
+            font-size: 0.9rem;
+            margin-left: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .viewer {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .back-button:hover {
+            text-decoration: underline;
+        }
+        
+        .language-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .language-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .language-button.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .verse {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .verse-number {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            .surah-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .surah-number {
+                margin-bottom: 0.5rem;
+            }
+            
+            .verse-count {
+                margin-left: 0;
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Al-Quran</h1>
+        <p>With English and Bengali Translations</p>
+    </header>
+    
+    <div class="container">
+        <div id="surah-list-container">
+            <h2>Surahs (Chapters)</h2>
+            <ul class="surah-list" id="surah-list">
+                <!-- Surah items will be dynamically added here -->
+            </ul>
+        </div>
+        
+        <div id="surah-viewer" class="viewer hidden">
+            <div class="viewer-header">
+                <button class="back-button" id="back-button">← Back to Surah List</button>
+                <h2 id="viewer-title">Surah Name</h2>
+            </div>
+            
+            <div class="language-selector">
+                <button class="language-button active" data-lang="arabic">Arabic</button>
+                <button class="language-button" data-lang="english">English</button>
+                <button class="language-button" data-lang="bengali">Bengali</button>
+            </div>
+            
+            <div id="verse-container">
+                <!-- Verses will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data - in a real app, you would have more complete data
+        const surahs = [
+            {
+                id: 1,
+                name: "الفاتحة",
+                translation: "Al-Fatiha",
+                bengaliName: "সূরা আল-ফাতিহা",
+                verses: 7,
+                versesArabic: [
+                    "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                    "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
+                    "الرَّحْمَٰنِ الرَّحِيمِ",
+                    "مَالِكِ يَوْمِ الدِّينِ",
+                    "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
+                    "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
+                    "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ"
+                ],
+                versesEnglish: [
+                    "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
+                    "[All] praise is [due] to Allah, Lord of the worlds -",
+                    "The Entirely Merciful, the Especially Merciful,",
+                    "Sovereign of the Day of Recompense.",
+                    "It is You we worship and You we ask for help.",
+                    "Guide us to the straight path -",
+                    "The path of those upon whom You have bestowed favor, not of those who have evoked [Your] anger or of those who are astray."
+                ],
+                versesBengali: [
+                    "পরম করুণাময় ও অতি দয়ালু আল্লাহর নামে;",
+                    "সমস্ত প্রশংসা আল্লাহর জন্য, যিনি সকল জগতের প্রতিপালক।",
+                    "যিনি পরম করুণাময় ও অতি দয়ালু।",
+                    "যিনি বিচার দিনের মালিক।",
+                    "আমরা একমাত্র তোমারই ইবাদাত করি এবং একমাত্র তোমারই কাছে সাহায্য প্রার্থনা করি।",
+                    "আমাদেরকে সরল পথ দেখাও;",
+                    "সেসব লোকের পথ, যাদেরকে তুমি নিয়ামত দান করেছ। তাদের পথ নয়, যাদের উপর তোমার গজব নাযিল হয়েছে এবং যারা পথভ্রষ্ট হয়েছে।"
+                ]
+            },
+            {
+                id: 2,
+                name: "البقرة",
+                translation: "Al-Baqarah",
+                bengaliName: "সূরা আল-বাকারা",
+                verses: 286,
+                versesArabic: [
+                    "الم",
+                    "ذَٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِّلْمُتَّقِينَ",
+                    "الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ وَيُقِيمُونَ الصَّلَاةَ وَمِمَّا رَزَقْنَاهُمْ يُنفِقُونَ"
+                ],
+                versesEnglish: [
+                    "Alif, Lam, Meem.",
+                    "This is the Book about which there is no doubt, a guidance for those conscious of Allah -",
+                    "Who believe in the unseen, establish prayer, and spend out of what We have provided for them,"
+                ],
+                versesBengali: [
+                    "আলিফ-লাম-মীম।",
+                    "এটি সেই কিতাব, যাতে কোন সন্দেহ নেই। এটি মুত্তাকীদের জন্য হিদায়াত।",
+                    "যারা অদৃশ্যে বিশ্বাস করে, নামায প্রতিষ্ঠা করে এবং আমি তাদেরকে যা রিযক দিয়েছি, তা থেকে ব্যয় করে।"
+                ]
+            },
+            {
+                id: 3,
+                name: "آل عمران",
+                translation: "Ali 'Imran",
+                bengaliName: "সূরা আল-ইমরান",
+                verses: 200,
+                versesArabic: [
+                    "الم",
+                    "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ",
+                    "نَزَّلَ عَلَيْكَ الْكِتَابَ بِالْحَقِّ مُصَدِّقًا لِّمَا بَيْنَ يَدَيْهِ وَأَنزَلَ التَّوْرَاةَ وَالْإِنجِيلَ"
+                ],
+                versesEnglish: [
+                    "Alif, Lam, Meem.",
+                    "Allah - there is no deity except Him, the Ever-Living, the Sustainer of [all] existence.",
+                    "He has sent down upon you, [O Muhammad], the Book in truth, confirming what was before it. And He revealed the Torah and the Gospel."
+                ],
+                versesBengali: [
+                    "আলিফ-লাম-মীম।",
+                    "আল্লাহ, তিনি ছাড়া কোন ইলাহ নেই। তিনি চিরঞ্জীব, সবকিছুর ধারক।",
+                    "তিনি আপনার উপর কিতাব নাযিল করেছেন সত্য সহকারে, যা পূর্ববর্তী কিতাবসমূহের সত্যায়নকারী। এবং তিনি তাওরাত ও ইঞ্জীল নাযিল করেছিলেন।"
+                ]
+            }
+        ];
+
+        // DOM elements
+        const surahListContainer = document.getElementById('surah-list-container');
+        const surahViewer = document.getElementById('surah-viewer');
+        const surahList = document.getElementById('surah-list');
+        const backButton = document.getElementById('back-button');
+        const viewerTitle = document.getElementById('viewer-title');
+        const verseContainer = document.getElementById('verse-container');
+        const languageButtons = document.querySelectorAll('.language-button');
+        
+        let currentSurah = null;
+        let currentLanguage = 'arabic';
+        
+        // Render surah list
+        function renderSurahList() {
+            surahList.innerHTML = '';
+            
+            surahs.forEach(surah => {
+                const li = document.createElement('li');
+                li.className = 'surah-item';
+                li.innerHTML = `
+                    <div class="surah-number">${surah.id}</div>
+                    <div class="surah-details">
+                        <div class="surah-name">${surah.name}</div>
+                        <div class="surah-translation">${surah.translation}</div>
+                        <div class="surah-bengali">${surah.bengaliName}</div>
+                    </div>
+                    <div class="verse-count">${surah.verses} verses</div>
+                `;
+                
+                li.addEventListener('click', () => showSurah(surah));
+                surahList.appendChild(li);
+            });
+        }
+        
+        // Show surah details
+        function showSurah(surah) {
+            currentSurah = surah;
+            viewerTitle.textContent = `${surah.name} - ${surah.translation}`;
+            
+            surahListContainer.classList.add('hidden');
+            surahViewer.classList.remove('hidden');
+            
+            renderVerses(currentLanguage);
+        }
+        
+        // Render verses based on selected language
+        function renderVerses(lang) {
+            verseContainer.innerHTML = '';
+            currentLanguage = lang;
+            
+            // Update active language button
+            languageButtons.forEach(btn => {
+                if (btn.dataset.lang === lang) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            const verses = currentSurah[`verses${lang.charAt(0).toUpperCase() + lang.slice(1)}`];
+            
+            verses.forEach((verse, index) => {
+                const verseElement = document.createElement('div');
+                verseElement.className = 'verse';
+                verseElement.innerHTML = `
+                    <span class="verse-number">${index + 1}.</span>
+                    <span class="verse-text">${verse}</span>
+                `;
+                verseContainer.appendChild(verseElement);
+            });
+        }
+        
+        // Go back to surah list
+        function goBack() {
+            surahViewer.classList.add('hidden');
+            surahListContainer.classList.remove('hidden');
+        }
+        
+        // Event listeners
+        backButton.addEventListener('click', goBack);
+        
+        languageButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                renderVerses(button.dataset.lang);
+            });
+        });
+        
+        // Initialize the app
+        renderSurahList();
+    </script>
+</body>
+</html>
